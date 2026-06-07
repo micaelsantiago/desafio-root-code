@@ -42,7 +42,7 @@ npm run dev
 cd backend && php artisan test
 ```
 
-37 testes, 95 asserções.
+39 testes, 102 asserções.
 
 ### Frontend - Build
 
