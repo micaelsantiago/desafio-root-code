@@ -111,6 +111,52 @@ class QuoteApiTest extends TestCase
         $this->assertEquals(['EUROPA', 'NACIONAL'], $destinos->toArray());
     }
 
+    public function test_store_retorna_aviso_esportes_negado_para_menor(): void
+    {
+        $payload = [
+            'destino'     => 'NACIONAL',
+            'data_inicio' => '2026-07-10',
+            'data_fim'    => '2026-07-20',
+            'viajantes'   => [
+                [
+                    'nome'            => 'Jovem',
+                    'data_nascimento' => '2009-07-10',
+                    'adicionais'      => ['ESPORTES_AVENTURA'],
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/quotes', $payload);
+
+        $response->assertStatus(200);
+        $this->assertNotEmpty($response->json('avisos'));
+        $this->assertStringContainsString('Jovem', $response->json('avisos.0'));
+        $this->assertStringContainsString('ESPORTES_AVENTURA', $response->json('avisos.0'));
+    }
+
+    public function test_store_retorna_aviso_esportes_negado_para_65_anos(): void
+    {
+        $payload = [
+            'destino'     => 'NACIONAL',
+            'data_inicio' => '2026-07-10',
+            'data_fim'    => '2026-07-20',
+            'viajantes'   => [
+                [
+                    'nome'            => 'Idoso',
+                    'data_nascimento' => '1960-07-10',
+                    'adicionais'      => ['ESPORTES_AVENTURA'],
+                ],
+            ],
+        ];
+
+        $response = $this->postJson('/api/quotes', $payload);
+
+        $response->assertStatus(200);
+        $this->assertNotEmpty($response->json('avisos'));
+        $this->assertStringContainsString('Idoso', $response->json('avisos.0'));
+        $this->assertStringContainsString('ESPORTES_AVENTURA', $response->json('avisos.0'));
+    }
+
     public function test_index_retorna_viajantes_vinculados(): void
     {
         $this->postJson('/api/quotes', [
