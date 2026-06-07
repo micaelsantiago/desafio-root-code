@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useQuote, type FormData, type TravelerFormData } from '@/context/QuoteContext';
 import { TravelerFields } from './TravelerFields';
 import { QuoteResult } from './QuoteResult';
+import { QuoteHistory } from './QuoteHistory';
 
 const DESTINOS = [
   { value: 'NACIONAL', label: 'Nacional' },
@@ -169,8 +171,19 @@ function FormPanel({ form, loading, error, fieldErrors, onFieldChange, onAddTrav
 }
 
 export function QuoteForm() {
-  const { state, setField, addTraveler, removeTraveler, submit, clearResult } = useQuote();
-  const { form, loading, error, fieldErrors, result } = state;
+  const { state, setField, addTraveler, removeTraveler, submit, clearResult, loadHistory, setSelectedHistory } = useQuote();
+  const { form, loading, error, fieldErrors, result, historyLoading } = state;
+  const [rightTab, setRightTab] = useState<'result' | 'history'>('result');
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  useEffect(() => {
+    if (result) {
+      setRightTab('result');
+    }
+  }, [result]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -189,28 +202,67 @@ export function QuoteForm() {
         </div>
 
         <div className="min-w-0 lg:border-l lg:border-[#dee8f2] lg:pl-10">
-          {result ? (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={clearResult}
-                className="absolute top-0 right-0 z-10 text-xs tracking-wider text-[#8aa4bc] hover:text-[#2d7dd2] transition-colors uppercase flex items-center gap-1"
-              >
-                <span className="text-lg leading-none">×</span> Fechar
-              </button>
-              <QuoteResult result={result} />
-            </div>
-          ) : (
-            <div className="h-full flex items-center justify-center text-center animate-fade-up delay-200">
-              <div className="space-y-4 max-w-xs">
-                <div className="w-12 h-12 mx-auto rounded-full border border-[#dee8f2] flex items-center justify-center">
-                  <span className="w-4 h-4 rotate-45 border border-[#2d7dd2]/40" />
-                </div>
-                <p className="text-sm text-[#8aa4bc] leading-relaxed">
-                  Preencha o formulário e clique em <span className="text-[#5a7a94]">Calcular Cotação</span> para ver o resultado aqui.
-                </p>
+          <div className="flex items-center gap-1 mb-6 border-b border-[#dee8f2]">
+            <button
+              type="button"
+              onClick={() => setRightTab('result')}
+              className={`px-4 py-2.5 text-xs tracking-wider uppercase transition-colors relative ${
+                rightTab === 'result'
+                  ? 'text-[#2d7dd2] font-medium'
+                  : 'text-[#8aa4bc] hover:text-[#4a6a8a]'
+              }`}
+            >
+              Resultado
+              {rightTab === 'result' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2d7dd2]" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedHistory(null);
+                setRightTab('history');
+                loadHistory();
+              }}
+              className={`px-4 py-2.5 text-xs tracking-wider uppercase transition-colors relative ${
+                rightTab === 'history'
+                  ? 'text-[#2d7dd2] font-medium'
+                  : 'text-[#8aa4bc] hover:text-[#4a6a8a]'
+              }`}
+            >
+              Histórico
+              {rightTab === 'history' && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2d7dd2]" />
+              )}
+            </button>
+          </div>
+
+          {rightTab === 'result' ? (
+            result ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={clearResult}
+                  className="absolute top-0 right-0 z-10 text-xs tracking-wider text-[#8aa4bc] hover:text-[#2d7dd2] transition-colors uppercase flex items-center gap-1"
+                >
+                  <span className="text-lg leading-none">×</span> Fechar
+                </button>
+                <QuoteResult result={result} />
               </div>
-            </div>
+            ) : (
+              <div className="h-full flex items-center justify-center text-center animate-fade-up delay-200">
+                <div className="space-y-4 max-w-xs">
+                  <div className="w-12 h-12 mx-auto rounded-full border border-[#dee8f2] flex items-center justify-center">
+                    <span className="w-4 h-4 rotate-45 border border-[#2d7dd2]/40" />
+                  </div>
+                  <p className="text-sm text-[#8aa4bc] leading-relaxed">
+                    Preencha o formulário e clique em <span className="text-[#5a7a94]">Calcular Cotação</span> para ver o resultado aqui.
+                  </p>
+                </div>
+              </div>
+            )
+          ) : (
+            <QuoteHistory />
           )}
         </div>
       </div>
