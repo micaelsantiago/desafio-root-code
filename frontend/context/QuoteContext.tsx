@@ -9,9 +9,11 @@ import {
 } from 'react';
 import {
   submitQuote,
+  listQuotes,
   ApiError,
   type QuoteRequest,
   type QuoteResponse,
+  type QuoteSummary,
 } from '@/lib/api';
 
 type Destino = QuoteRequest['destino'];
@@ -35,6 +37,11 @@ interface QuoteState {
   loading: boolean;
   error: string | null;
   fieldErrors: Record<string, string[]> | null;
+  history: QuoteSummary[];
+  historyLoading: boolean;
+  historyPage: number;
+  historyTotalPages: number;
+  selectedHistory: QuoteResponse | null;
 }
 
 type QuoteAction =
@@ -47,7 +54,10 @@ type QuoteAction =
   | { type: 'SUBMIT_SUCCESS'; result: QuoteResponse }
   | { type: 'SUBMIT_ERROR'; error: string; fieldErrors: Record<string, string[]> | null }
   | { type: 'CLEAR_RESULT' }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'LOAD_HISTORY_START' }
+  | { type: 'LOAD_HISTORY_SUCCESS'; data: QuoteSummary[]; page: number; totalPages: number }
+  | { type: 'SET_SELECTED_HISTORY'; result: QuoteResponse | null };
 
 const emptyTraveler = (): TravelerFormData => ({
   nome: '',
@@ -66,6 +76,11 @@ const initialState: QuoteState = {
   loading: false,
   error: null,
   fieldErrors: null,
+  history: [],
+  historyLoading: false,
+  historyPage: 1,
+  historyTotalPages: 1,
+  selectedHistory: null,
 };
 
 function reducer(state: QuoteState, action: QuoteAction): QuoteState {
@@ -134,6 +149,21 @@ function reducer(state: QuoteState, action: QuoteAction): QuoteState {
     case 'CLEAR_RESULT':
       return { ...state, result: null };
 
+    case 'LOAD_HISTORY_START':
+      return { ...state, historyLoading: true };
+
+    case 'LOAD_HISTORY_SUCCESS':
+      return {
+        ...state,
+        historyLoading: false,
+        history: action.data,
+        historyPage: action.page,
+        historyTotalPages: action.totalPages,
+      };
+
+    case 'SET_SELECTED_HISTORY':
+      return { ...state, selectedHistory: action.result };
+
     case 'RESET':
       return initialState;
 
@@ -152,6 +182,8 @@ interface QuoteContextValue {
   submit: () => Promise<void>;
   clearResult: () => void;
   reset: () => void;
+  loadHistory: (page?: number) => Promise<void>;
+  setSelectedHistory: (result: QuoteResponse | null) => void;
 }
 
 const QuoteContext = createContext<QuoteContextValue | null>(null);
@@ -224,6 +256,21 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
     }
   }, [state.form]);
 
+  const loadHistory = useCallback(async (page: number = 1) => {
+    dispatch({ type: 'LOAD_HISTORY_START' });
+    try {
+      const result = await listQuotes(page);
+      dispatch({
+        type: 'LOAD_HISTORY_SUCCESS',
+        data: result.data,
+        page: result.current_page,
+        totalPages: result.last_page,
+      });
+    } catch {
+      dispatch({ type: 'LOAD_HISTORY_SUCCESS', data: [], page: 1, totalPages: 1 });
+    }
+  }, []);
+
   const clearResult = useCallback(() => {
     dispatch({ type: 'CLEAR_RESULT' });
   }, []);
@@ -244,6 +291,9 @@ export function QuoteProvider({ children }: { children: ReactNode }) {
         submit,
         clearResult,
         reset,
+        loadHistory,
+        setSelectedHistory: (result) =>
+          dispatch({ type: 'SET_SELECTED_HISTORY', result }),
       }}
     >
       {children}
