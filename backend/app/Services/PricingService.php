@@ -102,7 +102,7 @@ class PricingService
         $adicionaisAplicados    = [];
         $aviso                  = null;
 
-        $viajanteAdicionais     = $viajante['adicionais'];
+        $viajanteAdicionais     = $viajante['adicionais'] ?? [];
 
         if (
             in_array('ESPORTES_AVENTURA', $viajanteAdicionais) &&
