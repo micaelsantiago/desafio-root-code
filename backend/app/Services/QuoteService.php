@@ -51,6 +51,7 @@ class QuoteService
     public function listar(): LengthAwarePaginator
     {
         return Quote::with('viajantes.adicionais')
+            ->orderBy('created_at', 'desc')
             ->paginate();
     }
 }

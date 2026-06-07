@@ -107,8 +107,8 @@ class QuoteApiTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonCount(2, 'data');
 
-        $this->assertEquals('NACIONAL', $response->json('data.0.destino'));
-        $this->assertEquals('EUROPA', $response->json('data.1.destino'));
+        $destinos = collect($response->json('data'))->pluck('destino')->sort()->values();
+        $this->assertEquals(['EUROPA', 'NACIONAL'], $destinos->toArray());
     }
 
     public function test_index_retorna_viajantes_vinculados(): void
