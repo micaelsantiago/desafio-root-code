@@ -29,6 +29,58 @@ export interface QuoteResponse {
   total_final: number;
 }
 
+export interface QuoteSummary {
+  id: number;
+  destino: string;
+  data_inicio: string;
+  data_fim: string;
+  dias_cobrados: number;
+  desconto_grupo_percentual: number;
+  total_final: string;
+  created_at: string;
+  viajantes: {
+    id: number;
+    nome: string;
+    idade: number;
+    multiplicador: string;
+    subtotal: string;
+    adicionais: { id: number; slug: string }[];
+  }[];
+}
+
+export interface PaginatedQuotes {
+  data: QuoteSummary[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
+
+export function summaryToResponse(summary: QuoteSummary): QuoteResponse {
+  return {
+    dias_cobrados: summary.dias_cobrados,
+    viajantes: summary.viajantes.map((v) => ({
+      nome: v.nome,
+      idade: v.idade,
+      multiplicador: parseFloat(v.multiplicador),
+      subtotal: parseFloat(v.subtotal),
+      adicionais_aplicados: v.adicionais.map((a) => a.slug),
+    })),
+    avisos: [],
+    desconto_grupo_percentual: summary.desconto_grupo_percentual,
+    total_final: parseFloat(summary.total_final),
+  };
+}
+
+export async function listQuotes(page: number = 1): Promise<PaginatedQuotes> {
+  const response = await fetch(`${API_BASE_URL}/api/quotes?page=${page}`);
+
+  if (!response.ok) {
+    throw new ApiError(response.status, 'Erro ao carregar histórico');
+  }
+
+  return response.json();
+}
+
 export async function submitQuote(data: QuoteRequest): Promise<QuoteResponse> {
   const response = await fetch(`${API_BASE_URL}/api/quotes`, {
     method: 'POST',
