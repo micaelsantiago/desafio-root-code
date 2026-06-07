@@ -1,6 +1,7 @@
 # Desafio Root Code - Seguro Viagem
 
 Motor de cotação de seguro viagem com API Laravel + frontend Next.js.
+Cálculo, persistência e histórico de cotações.
 
 ## Requisitos
 
@@ -41,7 +42,7 @@ npm run dev
 cd backend && php artisan test
 ```
 
-22 testes, 54 asserções.
+37 testes, 95 asserções.
 
 ### Frontend - Build
 
@@ -50,6 +51,8 @@ cd frontend && npm run build
 ```
 
 ## API
+
+### Calcular cotação
 
 `POST /api/quotes`
 
@@ -65,6 +68,62 @@ cd frontend && npm run build
       "adicionais": ["BAGAGEM", "ESPORTES_AVENTURA"]
     }
   ]
+}
+```
+
+Resposta:
+
+```json
+{
+  "dias_cobrados": 11,
+  "viajantes": [
+    {
+      "nome": "Ana",
+      "idade": 36,
+      "multiplicador": 1,
+      "subtotal": 335.5,
+      "adicionais_aplicados": ["ESPORTES_AVENTURA", "BAGAGEM"]
+    }
+  ],
+  "avisos": [],
+  "desconto_grupo_percentual": 0,
+  "total_final": 335.5
+}
+```
+
+### Listar cotações salvas
+
+`GET /api/quotes`
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "destino": "EUROPA",
+      "data_inicio": "2026-07-10",
+      "data_fim": "2026-07-20",
+      "dias_cobrados": 11,
+      "desconto_grupo_percentual": 0,
+      "total_final": "335.50",
+      "viajantes": [
+        {
+          "id": 1,
+          "nome": "Ana",
+          "idade": 36,
+          "multiplicador": "1.00",
+          "subtotal": "335.50",
+          "adicionais": [
+            { "slug": "BAGAGEM" },
+            { "slug": "ESPORTES_AVENTURA" }
+          ]
+        }
+      ]
+    }
+  ],
+  "current_page": 1,
+  "last_page": 1,
+  "total": 1
 }
 ```
 
@@ -109,6 +168,14 @@ Formulário sempre visível à esquerda, resultado à direita. Resultado persist
 ### Arredondamento half-up
 
 `round($valor, 2, PHP_ROUND_HALF_UP)` - arredondamento meio-para-cima.
+
+### Formatação de decimais no JSON
+
+O PHP serializa `float(205.00)` como `205` no JSON, pois a especificação JSON não diferencia `205` de `205.00`. O mesmo ocorre com `multiplicador`: `float(1.0)` é serializado como `1`. Isso é semanticamente equivalente: qualquer parser JSON trata `205` e `205.00` como o mesmo valor numérico. Optei por não converter para string com `number_format()` para manter a tipagem numérica correta.
+
+### Persistência
+
+Toda cotação calculada via `POST /api/quotes` é automaticamente salva no banco MySQL. As tabelas são normalizadas: `quotes`, `quote_viajantes`, `adicionais` (lookup) e `quote_viajante_adicional` (pivot). O `GET /api/quotes` retorna a lista paginada com viajantes e adicionais.
 
 ### Paleta de cores
 
