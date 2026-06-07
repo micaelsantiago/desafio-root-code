@@ -20,12 +20,17 @@ class PricingService
 
     public function calcularViagem(array $data): array
     {
-        $diasCobrados       = $this->calcularDiasCobrados($data['data_inicio'], $data['data_fim']);
+        $diasReais          = $this->calcularDiasReais($data['data_inicio'], $data['data_fim']);
+        $diasCobrados       = max($diasReais, 5);
         $tarifa             = $this->buscarTarifa($data['destino']);
 
         $viajantesResultado = [];
         $avisos             = [];
         $totalGrupo         = 0.0;
+
+        if ($diasReais < 5) {
+            $avisos[] = "Período mínimo de 5 dias cobrados (viagem de {$diasReais} " . ($diasReais === 1 ? 'dia' : 'dias') . ').';
+        }
 
         foreach ($data['viajantes'] as $viajante) {
             $resultado      = $this->calcularSubtotalViajante($viajante, $tarifa, $diasCobrados, $data['data_inicio']);
@@ -51,13 +56,11 @@ class PricingService
         ];
     }
 
-    private function calcularDiasCobrados(string $dataInicio, string $dataFim): int
+    private function calcularDiasReais(string $dataInicio, string $dataFim): int
     {
         $inicio = new DateTime($dataInicio);
         $fim    = new DateTime($dataFim);
-        $dias   = $fim->diff($inicio)->days + 1;
-
-        return max($dias, 5);
+        return $fim->diff($inicio)->days + 1;
     }
 
     private function buscarTarifa(string $regiao): float
