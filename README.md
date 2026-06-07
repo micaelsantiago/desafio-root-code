@@ -180,3 +180,14 @@ Toda cotação calculada via `POST /api/quotes` é automaticamente salva no banc
 ### Paleta de cores
 
 Azul claro e branco ("Coastal Light") com tipografia DM Serif Display (títulos) + Plus Jakarta Sans (corpo). Background com gradiente radial sutil e overlay de ruído para profundidade.
+
+## O que faltou
+
+### Autenticação
+Não implementada por não ser requisito do desafio. Em produção, usaria Laravel Sanctum para autenticação via API tokens, protegendo os endpoints de listagem e criação de cotações por usuário.
+
+### Tabela de destinos
+O destino é armazenado como string (`NACIONAL`, `AMERICAS`, `EUROPA`) diretamente na requisição e na tabela `quotes`. Idealmente teria uma tabela `destinos` com FK em `quotes`, permitindo cadastro de novas regiões sem alterar código e garantindo integridade referencial.
+
+### Separação por cliente
+Cotações não são vinculadas a um cliente/usuário. Com autenticação implementada, cada `quote` receberia um `user_id`, e o `GET /api/quotes` retornaria apenas as cotações do usuário logado.
