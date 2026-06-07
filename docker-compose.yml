@@ -11,6 +11,10 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PASSWORD: secret
+      DB_USERNAME: root
 
   frontend:
     build:
