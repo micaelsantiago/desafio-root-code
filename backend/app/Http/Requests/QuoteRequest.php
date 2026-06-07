@@ -20,7 +20,7 @@ class QuoteRequest extends FormRequest
         return [
             'destino'                      => ['required', 'in:NACIONAL,AMERICAS,EUROPA'],
             'data_inicio'                  => ['required', 'date'],
-            'data_fim'                     => ['required', 'date', 'gte:data_inicio'],
+            'data_fim'                     => ['required', 'date', 'after_or_equal:data_inicio'],
             'viajantes'                    => ['required', 'array', 'min:1'],
             'viajantes.*.nome'             => ['required', 'string'],
             'viajantes.*.data_nascimento'  => ['required', 'date'],
@@ -38,7 +38,7 @@ class QuoteRequest extends FormRequest
             'data_inicio.date'                    => 'A data de início deve ser uma data válida.',
             'data_fim.required'                   => 'Informe a data de fim da viagem.',
             'data_fim.date'                       => 'A data de fim deve ser uma data válida.',
-            'data_fim.gte'                        => 'A data de fim deve ser igual ou posterior à data de início.',
+            'data_fim.after_or_equal'             => 'A data de fim deve ser igual ou posterior à data de início.',
             'viajantes.required'                  => 'Adicione pelo menos um viajante para cotar o seguro.',
             'viajantes.array'                     => 'Os dados dos viajantes estão em formato inválido.',
             'viajantes.min'                       => 'Adicione pelo menos um viajante para cotar o seguro.',
